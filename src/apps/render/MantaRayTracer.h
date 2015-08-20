@@ -30,7 +30,7 @@ namespace gvtapps {
             void RenderImage(std::string);
             gvt::render::actor::RayVector rays;
             gvt::render::data::Dataset *scene;
-			gvt::core::CoreContext *cntxt;
+			gvt::render::RenderContext *cntxt;
 			gvt::core::DBNodeH root;
 
 

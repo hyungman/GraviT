@@ -13,7 +13,7 @@
 #include <gvt/render/data/Domains.h>
 #include <gvt/render/Schedulers.h>
 #include <gvt/render/adapter/manta/Wrapper.h>
-#include <gvt/render/adapter/optix/Wrapper.h>
+//#include <gvt/render/adapter/optix/Wrapper.h>
 #include <gvt/render/algorithm/Tracers.h>
 #include <gvt/render/data/scene/gvtCamera.h>
 #include <gvt/render/data/scene/Image.h>
@@ -29,7 +29,7 @@ using namespace gvt::render::data::scene;
 using namespace gvt::render::schedule;
 using namespace gvt::render::data::primitives;
 using namespace gvt::render::adapter::manta::data::domain;
-using namespace gvt::render::adapter::optix::data::domain;
+//using namespace gvt::render::adapter::optix::data::domain;
 
 
 int main(int argc, char** argv) {
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 //	our friend the cone.
 //
 	Point4f points[7];
-    points[0] = Point4f(0.5,0.0,0.0,1.0);
+	points[0] = Point4f(0.5,0.0,0.0,1.0);
 	points[1] = Point4f(-0.5,0.5,0.0,1.0);
 	points[2] = Point4f(-0.5,0.25,0.433013,1.0);
 	points[3] = Point4f(-0.5,-0.25,0.43013,1.0);
@@ -91,7 +91,8 @@ int main(int argc, char** argv) {
 	gvtPerspectiveCamera mycamera;
 	Point4f cameraposition(1.0,1.0,1.0,1.0);
 	Point4f focus(0.0,0.0,0.0,1.0);
-	float fov = 45.0 * M_PI/180.0;
+	//float fov = 45.0 * M_PI/180.0; camera now expects angle in degrees
+	float fov = 45.0 ;
 	Vector4f up(0.0,1.0,0.0,0.0);
 	mycamera.lookAt(cameraposition,focus,up);
 	mycamera.setFOV(fov);
@@ -119,39 +120,26 @@ int main(int argc, char** argv) {
 
 // camera
 	camnode = cntxt->createNodeFromType("Camera","conecam",root.UUID());
-	V = mycamera.getEyePoint();
-	camnode["eyePoint"] = V;
-	V = mycamera.getFocalPoint();
-	camnode["focus"] = V;
-	V = mycamera.getUpVector();
-	camnode["upVector"] = V;
+	camnode["eyePoint"] = mycamera.getEyePoint();
+	camnode["focus"] = mycamera.getFocalPoint();
+	camnode["upVector"] = mycamera.getUpVector();
 // film
 	filmnode = cntxt->createNodeFromType("Film","conefilm",root.UUID());
-	V = mycamera.getFilmSizeWidth();
-	filmnode["width"] = V;
-	V = mycamera.getFilmSizeHeight();
-	filmnode["height"] = V;
+	filmnode["width"] = mycamera.getFilmSizeWidth();
+	filmnode["height"] = mycamera.getFilmSizeHeight();
 // dataset
-    datanode = cntxt->createNodeFromType("Dataset","coneset",root.UUID());
-	V = gvt::render::scheduler::Image;
-    datanode["schedule"] = V;
-	V = new gvt::render::data::Dataset();
-    datanode["Dataset_Pointer"] = V;
-	V = gvt::render::adapter::Manta;
-	datanode["render_type"] = V;
+  datanode = cntxt->createNodeFromType("Dataset","coneset",root.UUID());
+  datanode["schedule"] = gvt::render::scheduler::Image;
+  datanode["Dataset_Pointer"] = new gvt::render::data::Dataset();
+	datanode["render_type"] = gvt::render::adapter::Manta;
 
-		std::cout << "this should print the tree " << std::endl;
-	cntxt->database()->printTree(root.UUID(),10,std::cout);
 
-    if(gvt::core::variant_toInteger(V) == gvt::render::adapter::Manta) {
+    if(gvt::core::variant_toInteger(datanode["render_type"].value()) == gvt::render::adapter::Manta) {
 	    gvt::core::variant_toDatasetPointer(root["Dataset"]["Dataset_Pointer"].value())->addDomain(new MantaDomain(domain));
 	}
-	V = Vector3f(1.,1.,1.);
-    datanode["topology"] = V;
-	V = gvt::render::accelerator::BVH;
-	datanode["accel_type"] = V;
-	V = domain->getMesh();
-	datanode["Mesh_Pointer"] = V;
+  datanode["topology"] = Vector3f(1.,1.,1.);
+	datanode["accel_type"] = gvt::render::accelerator::BVH;
+	datanode["Mesh_Pointer"] = domain->getMesh();
 
 	int width = gvt::core::variant_toInteger(root["Film"]["width"].value());
 	std::cout << "this should print the tree " << width << std::endl;
@@ -161,7 +149,7 @@ int main(int argc, char** argv) {
 //
 	mycamera.AllocateCameraRays();
 	mycamera.generateRays();
-    int stype = gvt::core::variant_toInteger(root["Dataset"]["schedule"].value());
+	int stype = gvt::core::variant_toInteger(root["Dataset"]["schedule"].value());
 	if(stype ==gvt::render::scheduler::Image) {
 		gvt::render::algorithm::Tracer<ImageScheduler>(mycamera.rays,myimage)();
 	} else if(stype == gvt::render::scheduler::Domain) {

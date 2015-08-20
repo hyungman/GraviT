@@ -138,6 +138,7 @@ void gvtServer::Launch(int argc, char** argv)
       while(!done)
       {
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+				//printf("server got probe, tag: %d\n", status.MPI_TAG);
         if (status.MPI_TAG == msg.tag)
         {
           done = true;

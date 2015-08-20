@@ -127,7 +127,7 @@ ConfigFileLoader::ConfigFileLoader(const std::string filename)
                 
                 GVT_DEBUG(DBG_ALWAYS,"Aff. m : \n" << domain->m);
                 GVT_DEBUG(DBG_ALWAYS,"Aff. minv : \n" << domain->minv);
-                GVT_DEBUG(DBG_ALWAYS,"BB : \n" << domain->getWorldBoundingBox());
+                GVT_DEBUG(DBG_ALWAYS,"World BB : \n" << domain->getWorldBoundingBox());
                 GVT_DEBUG(DBG_ALWAYS,"BB : \n" << domain->boundingBox);
                 
             }

@@ -148,7 +148,7 @@ DBNodeH& DBNodeH::operator+=(DBNodeH child)
 
 DBNodeH& DBNodeH::operator=(Variant val)
 {
-//    DEBUG(p_name.toStdString());
+    //DEBUG(p_name.toStdString());
     setValue(val);
     return *this;
 }

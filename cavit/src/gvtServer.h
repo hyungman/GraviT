@@ -105,7 +105,7 @@ class gvtServer
 public:
   gvtServer() : g_granularity(1) {}
 void Launch(int argc, char** argv);
-  StateLocal stateLocal;
+StateLocal stateLocal;
 StateUniversal stateUniversal;
 MPIBuffer buffer;
 int width;

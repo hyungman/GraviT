@@ -30,8 +30,10 @@ using namespace cvt;
 
 static size_t g_numThreads = 0;
 
-size_t display_width = 128;
-size_t display_height = 128;
+size_t display_width = 1024;
+size_t display_height = 768;
+//size_t display_width = 128;
+//size_t display_height = 128;
 int bench_warmup = 0;
 int bench_frames = 0;
 int display_numRenderers=0;
@@ -87,7 +89,7 @@ void* parallelProcessPixels(void* args)
 
 void displayFunc(void) 
 {
-  DEBUG("display");
+  //DEBUG("display");
   static         boost::timer::cpu_timer render_timer, bench_timer;
   static    boost::timer::nanosecond_type render_times_accumulated(0);
   static double bench_time=0;
@@ -97,10 +99,10 @@ void displayFunc(void)
   static StateFrame frame;
   frame.width = display_width;
   frame.height = display_height;
-    // printf("gvtDisplay: rendering frame %d\n", frame.frame);
+     //printf("gvtDisplay: rendering frame %d\n", frame.frame);
 
   frame.camera = g_camera;
-    // printf("bench frames: %d\n", bench_frames);
+     //printf("bench frames: %d\n", bench_frames);
   if (bench_frames > 0 && frame.frame == bench_warmup)
   {
     bench_timer.start();
@@ -132,7 +134,7 @@ void displayFunc(void)
     StatePixelsT pixels(0,0,0,0,&display_framebuffer);
     pixels.Recv(MPI_ANY_SOURCE, MPI_COMM_WORLD, buffer);
     numPix += pixels.width*pixels.height;
-      // printf("gvtDisplay numpix: %d\n", numPix);
+       //printf("gvtDisplay numpix: %d\n", numPix);
   }
 
     // glRasterPos2i(-1, 1);
@@ -143,7 +145,7 @@ void displayFunc(void)
   render_timer.stop();
   render_times_accumulated += render_timer.elapsed().wall;
   glutPostRedisplay();
-  DEBUG("display end");
+  //DEBUG("display end");
   if (bench_frames > 0)
     displayFunc();
 }
@@ -240,10 +242,16 @@ void gvtDisplay::Launch(int argc, char** argv)
 
   bench_frames = 15;
   bench_warmup = 10;
-  g_camera.vfov = g_camera.hfov = 35;
-  g_camera.eye = glm::vec3(0,0,-100);
-  g_camera.lookat = glm::vec3(0,0,0);
+  g_camera.vfov = g_camera.hfov = 4.4;
+//	g_camera.hfov = atan(tan(3.14159/180.0*g_camera.vfov)/((double)height/(double)width))*180.0/3.14159;
+  g_camera.hfov = g_camera.vfov/((double)height/(double)width);
+  g_camera.eye = glm::vec3(-0.0168008,0.11015295,-2.9412954);
+  g_camera.lookat = glm::vec3(-0.016008,0.11015295,-0.0014823);
   g_camera.up = glm::vec3(0,1,0);
+  //g_camera.vfov = g_camera.hfov = 35;
+  //g_camera.eye = glm::vec3(0,0,-100);
+  //g_camera.lookat = glm::vec3(0,0,0);
+  //g_camera.up = glm::vec3(0,1,0);
 
   StateScene scene;
   scene.domains = domains;

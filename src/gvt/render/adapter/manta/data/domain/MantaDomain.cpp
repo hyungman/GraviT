@@ -296,7 +296,7 @@ void MantaDomain::trace(gvt::render::actor::RayVector& rayList, gvt::render::act
 {
     GVT_DEBUG(DBG_ALWAYS, "trace<MantaDomain>: " << rayList.size());
     GVT_DEBUG(DBG_ALWAYS, "tracing geometry of domain " << domainID);
-    size_t workload = std::max((size_t) 1, (size_t) (rayList.size() / (gvt::core::schedule::asyncExec::instance()->numThreads * 4)));
+    size_t workload = std::max((size_t) 1, (size_t) (rayList.size() / (gvt::core::schedule::asyncExec::instance()->numThreads * 4 )));
 
     for (int rc = 0; rc < gvt::core::schedule::asyncExec::instance()->numThreads; ++rc) 
     {

@@ -117,6 +117,7 @@ class AbstractTrace {
       gvt::render::data::domain::AbstractDomain* dom = NULL) {
 
     GVT_DEBUG(DBG_ALWAYS,"["<< mpi.rank << "] Shuffle");
+    GVT_DEBUG(DBG_ALWAYS,"["<< mpi.rank << "] Shuffle rays.size() " << rays.size() << std::endl);
     boost::timer::auto_cpu_timer t("Ray shuflle %t\n");
     int nchunks = 1;  // std::thread::hardware_concurrency();
     int chunk_size = rays.size() / nchunks;

@@ -135,6 +135,7 @@ gvtCameraBase::~gvtCameraBase() {
 // Perspective camera methods
 gvtPerspectiveCamera::gvtPerspectiveCamera(){
 	field_of_view = 30.0;
+	m_pi	 			    = gvt::core::math::Constants<double>::pi();
 }
 gvtPerspectiveCamera::gvtPerspectiveCamera(const gvtPerspectiveCamera& cam):gvtCameraBase(cam){
 	field_of_view = cam.field_of_view;
@@ -151,8 +152,8 @@ void gvtPerspectiveCamera::generateRays() {
 	float x,y;
 	// these basis directions are scaled by the aspect ratio and 
 	// the field of view.
-	Vector4f camera_vert_basis_vector  = Vector4f(0,1,0,0)*tan(field_of_view*0.5);
-	Vector4f camera_horiz_basis_vector = Vector4f(1,0,0,0)*tan(field_of_view*0.5)*aspectRatio;
+	Vector4f camera_vert_basis_vector  = Vector4f(0,1,0,0)*tan((m_pi/180.0*field_of_view)*0.5);
+	Vector4f camera_horiz_basis_vector = Vector4f(1,0,0,0)*tan((m_pi/180.0*field_of_view)*0.5)*aspectRatio;
 	Vector4f camera_normal_basis_vector = Vector4f(0,0,1,0);
 	Vector4f camera_space_ray_direction;
 	for(j=0;j<buffer_height;j++)

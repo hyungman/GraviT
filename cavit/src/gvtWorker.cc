@@ -96,7 +96,7 @@ struct MantaContext
 
     //Create light set
     Manta::LightSet* lights = new Manta::LightSet();
-    // lights->add(new Manta::PointLight(Manta::Vector(0, -5, 8), Manta::Color(Manta::RGBColor(1, 1, 1))));
+     lights->add(new Manta::PointLight(Manta::Vector(0, -5, 8), Manta::Color(Manta::RGBColor(1, 1, 1))));
 
     // Create ambient light
     Manta::AmbientLight* ambient;
@@ -133,7 +133,8 @@ struct MantaContext
             0/*loadbalancer*/, 0/*pixelsampler*/, 0/*renderer*/, shadows/*shadowAlgorithm*/, 0/*camera*/, scene/*scene*/, 0/*thread_storage*/, rng/*rngs*/, 0/*samplegenerator*/);
 
 
-    bunnyObj = new Manta::ObjGroup("/work/01336/carson/data/bunny.obj", material, Manta::MeshTriangle::KENSLER_SHIRLEY_TRI);
+    //bunnyObj = new Manta::ObjGroup("/work/01336/carson/data/bunny.obj", material, Manta::MeshTriangle::KENSLER_SHIRLEY_TRI);
+    bunnyObj = new Manta::ObjGroup("/work/01197/semeraro/maverick/gravit/data/geom/bunny.obj", material, Manta::MeshTriangle::KENSLER_SHIRLEY_TRI);
     bunnyAS = new Manta::DynBVH();
     bunnyObj->preprocess(*pContext);
     bunnyAS->setGroup(bunnyObj);
@@ -143,7 +144,8 @@ struct MantaContext
   }
   void AddDomain(StateDomain domain)
   {
-    Manta::Material *material = new Manta::Lambertian(Manta::Color(Manta::RGBColor(domain.id%255, (domain.id+128)%255, (domain.id+200)%255)));
+    Manta::Material *material = new Manta::Lambertian(Manta::Color(Manta::RGBColor((domain.id+1)%255, (domain.id+1)%255, (domain.id+1)%255)));
+    //Manta::Material *material = new Manta::Lambertian(Manta::Color(Manta::RGBColor(domain.id%255, (domain.id+128)%255, (domain.id+200)%255)));
     Manta::Cube* box = new Manta::Cube(material,
       Manta::Vector(domain.bound_min[0], domain.bound_min[1], domain.bound_min[2]),
       Manta::Vector(domain.bound_max[0], domain.bound_max[1], domain.bound_max[2]));
@@ -155,14 +157,14 @@ struct MantaContext
     Manta::Vector drange = dmax-dmin;
     Manta::AffineTransform t;
     t.initWithIdentity();
-    t.scale(drange*2);
+    //t.scale(drange*2);
     // t.scale(Manta::Vector(100,100,100));
-    t.translate(dmin+drange/2.0);
+    //t.translate(dmin+drange/2.0);
     // t.translate(Manta::Vector(3,0,0));
     Manta::Instance* instance = new Manta::Instance(bunnyAS, t);
     instance->preprocess(*(pContext));
     Manta::gvtMCube* domBox = new Manta::gvtMCube(material,
-      Manta::Vector(domain.bound_min[0], domain.bound_min[1], domain.bound_min[2]),
+     Manta::Vector(domain.bound_min[0], domain.bound_min[1], domain.bound_min[2]),
       Manta::Vector(domain.bound_max[0], domain.bound_max[1], domain.bound_max[2]), domain.id, instance);
     domBox->preprocess(*(pContext));
     
@@ -314,7 +316,7 @@ void Worker::Launch(int argc, char** argv)
 
   MPI_Comm intercomm;
   MPI_Status status;
-      #ifdef GVT_USE_PORT_COMM
+#ifdef GVT_USE_PORT_COMM
         // MPI_Init(&argc, &argv);
   char port_name[MPI_MAX_PORT_NAME];
   char conName[MPI_MAX_PORT_NAME];
@@ -322,18 +324,20 @@ void Worker::Launch(int argc, char** argv)
 
   MPI_Comm_size(comm, &size);
   sprintf(conName, "gvtRenderer%d", rank-1);
-  printf("client %d connecting\n", rank);
+  //printf("client %d connecting\n", rank);
   MPI_Lookup_name(conName, MPI_INFO_NULL, port_name);
   MPI_Comm_connect(port_name, MPI_INFO_NULL, 0, MPI_COMM_SELF, &stateLocal.intercomm);
         // MPI_Intercomm_merge(stateLocal.intercomm, 0, &intercomm);
         // MPI_Comm_rank(stateLocal.intercomm, &rank);
            //MPI_Comm_connect(port_name, MPI_INFO_NULL, 0, MPI_COMM_SELF, &intercomm);
-  printf("client %d connected\n", rank);
-        #else
+  //printf("client %d connected\n", rank);
+#else
   stateLocal.intercomm = MPI_COMM_WORLD;
-        #endif
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
 
   threads.resize(19);
+	std::cout << "rank " << rank << " starting " << threads.size() << " threads" << std::endl;
   for(int i =0; i < threads.size();i++)
   {
     pthread_create(&threads[i],NULL,&worker_thread, NULL);
@@ -367,7 +371,7 @@ void Worker::Launch(int argc, char** argv)
   while(!done)
   {
     MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-    // printf("worker got probe, tag: %d\n", status.MPI_TAG);
+     //printf("worker got probe, tag: %d\n", status.MPI_TAG);
     if (status.MPI_TAG == msg.tag)
     {
       done = true;
@@ -375,11 +379,11 @@ void Worker::Launch(int argc, char** argv)
     if (status.MPI_TAG == scene.tag)
     {
       scene.Recv(MPI_ANY_SOURCE,stateLocal.intercomm, buffer);
-      printf("worker got scene\n");
+      //printf("worker got scene\n");
       for(int i =0; i < scene.domains.size(); i++)
       {
-        printf("domain id: %zu minBound %f %f %f \n", scene.domains[i].id, 
-          scene.domains[i].bound_min[0],scene.domains[i].bound_min[1],scene.domains[i].bound_min[2]);
+        //printf("domain id: %zu minBound %f %f %f \n", scene.domains[i].id, 
+       //   scene.domains[i].bound_min[0],scene.domains[i].bound_min[1],scene.domains[i].bound_min[2]);
         mContext->AddDomain(scene.domains[i]);
       }
       mContext->Update();

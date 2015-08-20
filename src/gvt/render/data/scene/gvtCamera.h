@@ -101,6 +101,7 @@ namespace gvt {
 				virtual void generateRays();
 			protected:
 				float field_of_view;			  //!< Angle subtended by the film plane height from eye_point 
+				double m_pi ;
 			};
 
 			} // scene

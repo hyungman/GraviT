@@ -39,9 +39,12 @@ namespace gvt {
                 virtual void FilterRaysLocally() {
                     if(mpi) {
                         gvt::render::actor::RayVector lrays;
+                    		GVT_DEBUG(DBG_ALWAYS," Local Filter rays : " << rays.size() << std::endl);
+                    		GVT_DEBUG(DBG_ALWAYS," Local Filter start end : " << rays_start << " " << rays_end << std::endl);
                         lrays.assign(rays.begin() + rays_start,
                                      rays.begin() + rays_end);
                         rays.clear();
+                    		GVT_DEBUG(DBG_ALWAYS," Local Filter lrays: " << lrays.size() << std::endl);
                         shuffleRays(lrays);        
                     } else {
                         shuffleRays(rays);    
@@ -77,7 +80,7 @@ namespace gvt {
                                 domTarget = q->first;
                             }
                         }
-                        GVT_DEBUG(DBG_ALWAYS, "Selecting new domain");
+                        //GVT_DEBUG(DBG_ALWAYS, "Selecting new domain");
 
                         if (domTarget >= 0) 
                         {
