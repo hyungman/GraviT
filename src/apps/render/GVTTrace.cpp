@@ -2,6 +2,7 @@
 //  GVTTrace.C
 //
 
+#include "mpe.h"
 #include "ConfigFileLoader.h"
 #include "MantaRayTracer.h"
 #include "OptixRayTracer.h"
@@ -31,7 +32,12 @@ using namespace gvtapps::render;
 
 int main(int argc, char** argv) {
 
+	int event1a, event1b, event2a, event2b;
+	int event1, event2;
+	int rank = -1;
   MPI_Init(&argc, &argv);
+	MPE_Init_log();
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
   string filename, imagename;
@@ -46,7 +52,18 @@ int main(int argc, char** argv) {
   else
     imagename = "GVTTrace";
 
+	MPE_Log_get_state_eventIDs(&event1a, &event1b);
+	MPE_Log_get_state_eventIDs(&event2a, &event2b);
+  MPE_Log_get_solo_eventID( &event1);
+  MPE_Log_get_solo_eventID( &event2);
+	if(rank==0) {
+		MPE_Describe_state( event1a, event1b, "read input","red");
+		MPE_Describe_state( event2a, event2b, "Trace","green");
+	}
+	MPE_Log_event(event1,0,NULL);
+	MPE_Log_event(event1a,0,NULL);
   gvtapps::render::ConfigFileLoader cl(filename);
+	MPE_Log_event(event1b,0,NULL);
 
   bool domain_choosen = false;
 #ifdef GVT_RENDER_ADAPTER_MANTA
@@ -55,7 +72,10 @@ int main(int argc, char** argv) {
     domain_choosen = true;
     MantaRayTracer rt(cl);
     MPI_Barrier(MPI_COMM_WORLD);
+		MPE_Log_event(event2,0,NULL);
+		MPE_Log_event(event2a,0,NULL);
     rt.RenderImage(imagename);
+		MPE_Log_event(event2b,0,NULL);
   }
 #endif
 #ifdef GVT_RENDER_ADAPTER_OPTIX
@@ -78,7 +98,8 @@ int main(int argc, char** argv) {
 #endif
 
   GVT_ASSERT(domain_choosen,"The requested domain type is not available, please recompile");
-
+	MPE_Log_sync_clocks();
+	MPE_Finish_log("gvtTracerlog");
   if (MPI::COMM_WORLD.Get_size() > 1) MPI_Finalize();
 
   return 0;
