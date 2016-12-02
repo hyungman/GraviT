@@ -16,7 +16,7 @@ namespace data {
 class OSPRayAdapter : public gvt::render::Adapter {
 public:
   /** 
-   * Construct the OSPRayAdapter. 
+   * Construct the OSPRayAdapter.  
    */
   OSPRayAdapter(gvt::render::data::primitives::Data*);
   OSPRayAdapter(gvt::render::data::primitives::Mesh*);
@@ -25,8 +25,18 @@ public:
   OSPModel GetTheOSPModel() {return theOSPModel;}
   ~OSPRayAdapter();
   static void initospray(int *argc,char **argv) ;
+  /**
+   * convert gravit ray format to ray format used by OSPRay. 
+   */
   OSPExternalRays GVT2OSPRays(gvt::render::actor::RayVector &rayList);
+  /** 
+   * convert OSPRay rays returned from the OSPTraceRays function to gravit format.
+   * OSPTraceRays. 
+   */
   void OSP2GVTMoved_Rays(OSPExternalRays &out, OSPExternalRays &rl, gvt::render::actor::RayVector &moved_rays);
+  /**
+   * trace the rays in rayList and return the result in moved_rays. 
+   */
   virtual void trace(gvt::render::actor::RayVector &rayList, gvt::render::actor::RayVector &moved_rays, glm::mat4 *m,
             glm::mat4 *minv, glm::mat3 *normi, std::vector<gvt::render::data::scene::Light *> &lights,
                   size_t begin = 0, size_t end = 0);

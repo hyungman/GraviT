@@ -185,10 +185,9 @@ public:
         } while (lastAssigned != startedAt);
       }
 
-      //    if (mpi.rank==0)
-      //          std::cout << "[" << mpi.rank << "] domain scheduler: instId: " << i <<
-      //          ", target mpi node: " << mpiInstanceMap[i] << ", world size: " << mpi.world_size <<
-      //                                                 std::endl;
+       if (mpi.rank==0)
+         std::cout << "[" << mpi.rank << "] domain scheduler: instId: " << i <<
+         ", target mpi node: " << mpiInstanceMap[i] << ", world size: " << mpi.world_size         << std::endl;
     }
   }
 
@@ -377,7 +376,6 @@ public:
 
           GVT_DEBUG(DBG_ALWAYS, "image scheduler: marching rays");
           t_shuffle.resume();
-          //std::cout << " dtr moved_rays size " << moved_rays[0].origin.x << std::cout;
           shuffleRays(moved_rays, instTarget);
           moved_rays.clear();
           t_shuffle.stop();
