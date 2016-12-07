@@ -250,34 +250,70 @@ public:
     GVT_DEBUG(DBG_ALWAYS, "[" << mpi.rank << "] Shuffle: start");
     GVT_DEBUG(DBG_ALWAYS, "[" << mpi.rank << "] Shuffle: rays: " << rays.size());
 
-    glm::vec3 constcolor ={0.0,0.0,0.0};
     const size_t chunksize = MAX(2, rays.size() / (std::thread::hardware_concurrency() * 4));
     gvt::render::data::accel::BVH &acc = *dynamic_cast<gvt::render::data::accel::BVH *>(acceleration);
     static tbb::simple_partitioner ap;
     tbb::parallel_for(tbb::blocked_range<gvt::render::actor::RayVector::iterator>(rays.begin(), rays.end(), chunksize), [&](tbb::blocked_range<gvt::render::actor::RayVector::iterator> raysit) {
       std::vector<gvt::render::data::accel::BVH::hit> hits = acc.intersect<GVT_SIMD_WIDTH>(raysit.begin(), raysit.end(), domID);
       std::map<int, gvt::render::actor::RayVector> local_queue;
-      for (size_t i = 0; i < hits.size(); i++) {
+#ifdef GVT_BUILD_VOLUME
+      for (size_t i = 0; i< hits.size(); i++)
+      {
        gvt::render::actor::Ray &r = *(raysit.begin() + i);
-       if (hits[i].next != -1) {
-         r.origin = r.origin + r.direction * (hits[i].t * 0.95f);
-         local_queue[hits[i].next].push_back(r);
-          tbb::mutex::scoped_lock fbloc(colorBuf_mutex[r.id%width]);
-          colorBuf[r.id] += constcolor;
-       } else if (r.type == gvt::render::actor::Ray::SHADOW && glm::length(r.color) > 0) {
+       int term = r.depth; // volume uses depth variable for termination type
+       if(term & RAY_BOUNDARY) // check to see if the ray terminated at boundary
+        if (hits[i].next != -1) // if it hits another domain queue it
+        {
+          r.origin = r.origin + r.direction * (hits[i].t * 0.95f);
+          local_queue[hits[i].next].push_back(r);
+          //std::cout << " requeue ray " << i << std::endl;
+        }
+        else // if not mod the term type to external boundary
+        {
+          term &= ~RAY_BOUNDARY;
+          term |= RAY_EXTERNAL_BOUNDARY;
+          //std::cout << " external boundary ray and no hit " << i << std::endl;
+        }
+       // now run through the possible ray types
+       // to see if the ray gets put on the color buffer
+       if (r.type == RAY_PRIMARY)
+        if((term & RAY_OPAQUE) || (term & RAY_EXTERNAL_BOUNDARY))//hit something opaque
+        {
          tbb::mutex::scoped_lock fbloc(colorBuf_mutex[r.id % width]);
          colorBuf[r.id] += r.color;
-       } else if ( r.type == RAY_PRIMARY ) {
-         if (((int)r.t_min & RAY_OPAQUE) | ((int)r.t_min & RAY_BOUNDARY)) {
-          tbb::mutex::scoped_lock fbloc(colorBuf_mutex[r.id%width]);
-          colorBuf[r.id] += r.color;
-         }
-       }
+         //std::cout << " color " << r.color << std::endl;
+        }
+        else if(term & ~RAY_BOUNDARY)// hit something transparent. requeue it
+        {
+          // TODO: make this work if there are translucent bits
+        }
+        else
+        {
+          // translucent and terminated at partition boundary. Already put on
+          // queue in first boundary test. Not terminated so no colorbuffer
+        }
       }
-      for (auto &q : local_queue) {
+
+#else
+      for (size_t i = 0; i < hits.size(); i++) 
+      {
+       gvt::render::actor::Ray &r = *(raysit.begin() + i);
+       if (hits[i].next != -1) 
+       {
+         r.origin = r.origin + r.direction * (hits[i].t * 0.95f);
+         local_queue[hits[i].next].push_back(r);
+       } 
+       else if (r.type == gvt::render::actor::Ray::SHADOW && glm::length(r.color) > 0) 
+       {
+         tbb::mutex::scoped_lock fbloc(colorBuf_mutex[r.id % width]);
+         colorBuf[r.id] += r.color;
+       } 
+      }
+#endif
+      for (auto &q : local_queue) 
+      {
         queue_mutex[q.first].lock();
-        queue[q.first].insert(queue[q.first].end(),std::make_move_iterator(local_queue[q.first].begin()),
-                              std::make_move_iterator(local_queue[q.first].end()));
+        queue[q.first].insert(queue[q.first].end(),std::make_move_iterator(local_queue[q.first].begin()), std::make_move_iterator(local_queue[q.first].end()));
         queue_mutex[q.first].unlock();
       }
       }, ap);
